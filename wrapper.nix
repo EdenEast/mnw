@@ -248,7 +248,7 @@ lib.makeOverridable (
           )
           + "\""
         )
-        "--set"
+        "--set-default"
         "NVIM_APPNAME"
         appName
 
