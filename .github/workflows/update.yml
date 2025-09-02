@@ -1,0 +1,41 @@
+name: 'Upstream Sync'
+
+permissions:
+  contents: write
+
+on:
+  schedule:
+    - cron:  '0 7 * * 1,4' # scheduled at 07:00 every Monday and Thursday
+
+  workflow_dispatch:
+
+jobs:
+  sync_latest_from_upstream:
+    runs-on: ubuntu-latest
+    name: Sync latest commits from upstream repo
+
+    steps:
+    - name: Checkout target repo
+      uses: actions/checkout@v4
+      with:
+        ref: master
+        fetch-depth: 0
+
+    - name: Sync upstream changes
+      id: sync
+      uses: aormsby/Fork-Sync-With-Upstream-action@v3.4.1
+      with:
+        target_sync_branch: master
+        target_repo_token: ${{ secrets.GITHUB_TOKEN }}
+        upstream_sync_branch: master
+        upstream_sync_repo: Gerg-L/mnw
+        git_config_pull_rebase: true
+
+    - name: New commits found
+      if: steps.sync.outputs.has_new_commits == 'true'
+      run: |
+        git config --local user.name  "github-actions[bot]"
+        git config --local user.email  "github-actions[bot]@users.noreply.github.com"
+        git checkout dev
+        git rebase master
+        git push --force-with-lease
